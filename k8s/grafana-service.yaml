@@ -1,0 +1,62 @@
+# Service, externalIP doesn't work with VirtualBox...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+  selector:
+    app: grafana
+  externalIPs:
+  - 172.17.4.200
+
+# Deployment
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        volumeMounts:
+        - name: grafana-config-volume
+          mountPath: /etc/config
+        resources:
+          requests:
+            cpu: 300m
+            memory: 100Mi
+        env:
+        - name: GRAFANA_EXAMPLE
+          value: example
+        ports:
+        - containerPort: 3000
+      volumes:
+      - name: grafana-config-volume
+        configMap:
+          name: grafana-config
+
+# ConfigMap
+---
+kind: ConfigMap
+apiVersion: v1
+data:
+  sample.conf: |
+    this is a sample multiline config
+    ble ble ble
+  another.file: |
+    esio test
+metadata:
+  name: grafana-config
